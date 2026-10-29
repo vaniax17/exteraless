@@ -3229,7 +3229,7 @@ public class ChatActivity extends BaseFragment implements
             dialog_id = userId;
             botUser = arguments.getString("botUser");
             if (inlineQuery != null) {
-                getMessagesController().sendBotStart(currentUser, inlineQuery);
+                getMessagesController().sendBotStart(currentUser, inlineQuery, true);
             } else if (premiumInvoiceBot && !TextUtils.isEmpty(botUser)) {
                 getMessagesController().sendBotStart(currentUser, botUser);
 
@@ -14137,7 +14137,7 @@ public class ChatActivity extends BaseFragment implements
 
     public void setBotUser(String value) {
         if (inlineReturn != 0) {
-            getMessagesController().sendBotStart(currentUser, value);
+            getMessagesController().sendBotStart(currentUser, value, true);
         } else {
             sentBotStart = true;
             getMessagesController().sendBotStart(currentUser, botUser = value);
@@ -14855,6 +14855,7 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void openAttachMenu() {
+        if (app.exteraless.privacy.BotAccountRouter.guardComposer(this, currentAccount, dialog_id)) return;
         if (getParentActivity() == null || chatActivityEnterView != null && !TextUtils.isEmpty(chatActivityEnterView.getSlowModeTimer())) {
             return;
         }
