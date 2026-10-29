@@ -126,6 +126,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
     private int botPrivacyHeaderRow;
     private int botPrivacyEnabledRow;
     private int botPrivacyAccountRow;
+    private int botPrivacyAlwaysAskRow;
     private int botPrivacyInfoRow;
 
     private int profileHeaderRow;
@@ -205,7 +206,8 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
         botPrivacyHeaderRow = addRow("botPrivacyHeader");
         botPrivacyEnabledRow = addRow("botPrivacyEnabled", "OEBotPrivacyEnabled");
-        botPrivacyAccountRow = addRow("botPrivacyAccount", "OEBotPrivacyAccount");
+        botPrivacyAlwaysAskRow = addRow("botPrivacyAlwaysAsk", "OEBotPrivacyAlwaysAsk");
+        botPrivacyAccountRow = GeneralConfig.botPrivacyAlwaysAsk.Bool() ? -1 : addRow("botPrivacyAccount", "OEBotPrivacyAccount");
         botPrivacyInfoRow = addRow();
 
         profileHeaderRow = addRow("profileHeader");
@@ -280,6 +282,8 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                 app.exteraless.privacy.BotAccountRouter.accounts(), account -> {
                     GeneralConfig.botPrivacyUserId.setConfigLong(org.telegram.messenger.UserConfig.getInstance(account).getClientUserId());
                     GeneralConfig.botPrivacyEnabled.setConfigBool(true);
+                    GeneralConfig.botPrivacyAlwaysAsk.setConfigBool(false);
+                    updateRows();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
                 });
     }
@@ -297,9 +301,25 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             if (GeneralConfig.botPrivacyEnabled.Bool()) {
                 GeneralConfig.botPrivacyEnabled.setConfigBool(false);
                 listAdapter.notifyDataSetChanged();
+            } else if (GeneralConfig.botPrivacyAlwaysAsk.Bool()) {
+                GeneralConfig.botPrivacyEnabled.setConfigBool(true);
+                listAdapter.notifyDataSetChanged();
             } else {
                 selectBotPrivacyAccount();
             }
+            return;
+        }
+        if (position == botPrivacyAlwaysAskRow) {
+            boolean alwaysAsk = !GeneralConfig.botPrivacyAlwaysAsk.Bool();
+            if (!alwaysAsk && GeneralConfig.botPrivacyEnabled.Bool() &&
+                    app.exteraless.privacy.BotAccountRouter.configuredAccount() < 0) {
+                selectBotPrivacyAccount();
+                return;
+            }
+            GeneralConfig.botPrivacyAlwaysAsk.setConfigBool(alwaysAsk);
+            if (alwaysAsk) GeneralConfig.botPrivacyEnabled.setConfigBool(true);
+            updateRows();
+            listAdapter.notifyDataSetChanged();
             return;
         }
         if (position == botPrivacyAccountRow) {
@@ -1231,6 +1251,10 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                                 OpenExteraConfig.relativeLastSeen.Bool(), false, true);
                     } else if (position == botPrivacyEnabledRow) {
                         cell.setTextAndCheck(getString(R.string.OEBotPrivacyEnabled), GeneralConfig.botPrivacyEnabled.Bool(), true);
+                    } else if (position == botPrivacyAlwaysAskRow) {
+                        cell.setTextAndValueAndCheck(getString(R.string.OEBotPrivacyAlwaysAsk),
+                                getString(R.string.OEBotPrivacyAlwaysAskInfo), GeneralConfig.botPrivacyAlwaysAsk.Bool(), true,
+                                botPrivacyAccountRow != -1);
                     } else if (position == hidePhoneRow) {
                         cell.setTextAndCheck(getString(R.string.OEGeneralHidePhone),
                                 NekoConfig.hidePhone.Bool(), true);
@@ -1339,7 +1363,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                     } else if (position == storageDividerRow) {
                         cell.setText(getSavePathInfo());
                     } else if (position == botPrivacyInfoRow) {
-                        cell.setText(getString(R.string.OEBotPrivacyInfo));
+                        cell.setText(getString(GeneralConfig.botPrivacyAlwaysAsk.Bool() ? R.string.OEBotPrivacyAskPrivacyInfo : R.string.OEBotPrivacyInfo));
                     } else if (position == profileDividerRow) {
                         cell.setText(getString(R.string.OEGeneralShowIdAndDcInfo));
                     } else if (position == archiveDividerRow) {

@@ -37,6 +37,7 @@ public final class BotAccountRouter {
     private static final HashSet<String> approvedSends = new HashSet<>();
     private static final HashMap<String, Long> handoffs = new HashMap<>();
     private static boolean lastEnabled;
+    private static boolean lastAlwaysAsk;
     private static long lastConfigured;
 
     private BotAccountRouter() {}
@@ -45,12 +46,14 @@ public final class BotAccountRouter {
         GeneralConfig.init();
         boolean enabled = GeneralConfig.botPrivacyEnabled.Bool();
         long configured = GeneralConfig.botPrivacyUserId.Long();
-        if (enabled != lastEnabled || configured != lastConfigured) {
+        boolean alwaysAsk = GeneralConfig.botPrivacyAlwaysAsk.Bool();
+        if (enabled != lastEnabled || configured != lastConfigured || alwaysAsk != lastAlwaysAsk) {
             approvedSends.clear();
             navigation.clear();
             webviews.clear();
             handoffs.clear();
             lastEnabled = enabled;
+            lastAlwaysAsk = alwaysAsk;
             lastConfigured = configured;
         }
         return enabled;
@@ -123,7 +126,7 @@ public final class BotAccountRouter {
     }
 
     private static String stamp(int account, long botId) {
-        return UserConfig.getInstance(account).getClientUserId() + ":" + botId + ":" + GeneralConfig.botPrivacyUserId.Long();
+        return UserConfig.getInstance(account).getClientUserId() + ":" + botId + ":" + GeneralConfig.botPrivacyUserId.Long() + ":" + GeneralConfig.botPrivacyAlwaysAsk.Bool();
     }
 
     /** One-use handoff from a verified generic link to its chat or Mini App navigation. */
@@ -146,6 +149,7 @@ public final class BotAccountRouter {
         final boolean explicit;
         final Utilities.Callback<Integer> callback;
         final long configured = GeneralConfig.botPrivacyUserId.Long();
+        final boolean alwaysAsk = GeneralConfig.botPrivacyAlwaysAsk.Bool();
         final int active = UserConfig.selectedAccount;
         final long[] identities = new long[UserConfig.MAX_ACCOUNT_COUNT];
         final ArrayList<Integer> existing = new ArrayList<>();
@@ -171,7 +175,7 @@ public final class BotAccountRouter {
                 current[i] = UserConfig.isValidAccount(i) ? UserConfig.getInstance(i).getClientUserId() : 0;
             }
             return BotAccountPolicy.isCurrent(identities, current, configured, GeneralConfig.botPrivacyUserId.Long(),
-                    active, UserConfig.selectedAccount, enabled()) && (activity == null || !activity.isFinishing());
+                    active, UserConfig.selectedAccount, enabled(), alwaysAsk, GeneralConfig.botPrivacyAlwaysAsk.Bool()) && (activity == null || !activity.isFinishing());
         }
 
         void complete(int account, Boolean established) {
@@ -192,13 +196,13 @@ public final class BotAccountRouter {
             finished = true;
             if (!valid()) return;
             int[] established = existing.stream().mapToInt(Integer::intValue).toArray();
-            int result = BotAccountPolicy.choose(true, requested, configuredAccount(), explicit, established, !failed);
-            if (result == BotAccountPolicy.AMBIGUOUS) {
-                selectAccount(activity, established, account -> {
+            int result = BotAccountPolicy.choose(true, alwaysAsk, requested, configuredAccount(), explicit, established, !failed);
+            if (result == BotAccountPolicy.AMBIGUOUS || result == BotAccountPolicy.ASK) {
+                selectAccount(activity, result == BotAccountPolicy.ASK ? accounts() : established, account -> {
                     if (valid()) callback.run(account);
                 });
             } else if (result < 0) {
-                error(activity, result == BotAccountPolicy.UNAVAILABLE || configuredAccount() < 0);
+                error(activity, result == BotAccountPolicy.UNAVAILABLE || !alwaysAsk && configuredAccount() < 0);
             } else if (PasscodeHelper.isAccountHidden(result)) {
                 error(activity, false);
             } else {
@@ -386,10 +390,11 @@ public final class BotAccountRouter {
                 req.app = app;
                 long identity = UserConfig.getInstance(account).getClientUserId();
                 long setting = GeneralConfig.botPrivacyUserId.Long();
+                boolean alwaysAsk = GeneralConfig.botPrivacyAlwaysAsk.Bool();
                 int active = UserConfig.selectedAccount;
                 ConnectionsManager.getInstance(account).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     if (!enabled() || identity != UserConfig.getInstance(account).getClientUserId() ||
-                            setting != GeneralConfig.botPrivacyUserId.Long() || active != UserConfig.selectedAccount) return;
+                            setting != GeneralConfig.botPrivacyUserId.Long() || alwaysAsk != GeneralConfig.botPrivacyAlwaysAsk.Bool() || active != UserConfig.selectedAccount) return;
                     if (error != null || !(response instanceof TLRPC.TL_messages_botApp)) {
                         error(fragment.getParentActivity(), false);
                         return;
@@ -407,6 +412,10 @@ public final class BotAccountRouter {
     /** Revalidate stale open chats after enabling/changing the setting, before sending anything. */
     public static boolean guardSend(int account, long peer, Runnable retry) {
         if (!enabled() || peer <= 0 || approvedSends.contains(stamp(account, peer))) return false;
+        if (consumeHandoff(account, peer)) {
+            approvedSends.add(stamp(account, peer));
+            return false;
+        }
         TLRPC.User bot = MessagesController.getInstance(account).getUser(peer);
         if (bot == null) {
             long identity = UserConfig.getInstance(account).getClientUserId();

@@ -32,6 +32,9 @@ object GeneralConfig {
     @JvmField
     val botPrivacyEnabled = addConfig("OEGeneralBotPrivacyEnabled", ConfigItem.configTypeBool, false)
 
+    @JvmField
+    val botPrivacyAlwaysAsk = addConfig("OEGeneralBotPrivacyAlwaysAsk", ConfigItem.configTypeBool, false)
+
     // Telegram user ID, never an account slot (slots are reused after logout).
     @JvmField
     val botPrivacyUserId = addConfig("OEGeneralBotPrivacyUserId", ConfigItem.configTypeLong, 0L)

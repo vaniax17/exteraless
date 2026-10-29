@@ -6,6 +6,31 @@ show names and public usernames. The global preference stores the Telegram user 
 not the reusable account slot. GeneralConfig supplies persistence, typed backup
 and reset; SettingsHelper supplies settings search. English and Russian are included.
 
+## Always ask
+
+The **Always ask** switch uses the same privacy routing feature without requiring a
+preselected account. For each new private bot conversation, the native picker asks
+which currently logged-in, visible account to use. Cancelling does not open/start
+the bot. Existing conversations still retain their original accounts; generic
+links with several established conversations still offer only those accounts.
+
+Turning this mode on enables the privacy feature and hides the dedicated-account
+row. Turning it off restores the saved dedicated account, or asks for one when none
+is available. Turning the main feature off disables routing while retaining the
+mode preference. The boolean is global and participates in backup/reset/search.
+Changing the mode invalidates pending asynchronous decisions and cached handoffs.
+One navigation uses one picker: its selected identity is handed to chat/start/Mini
+App handling without asking again for the same action.
+
+Manual follow-up (not run by the agent): enable Always ask without selecting an
+account, open a fresh bot from each logged-in account and choose different accounts.
+Cancel one picker and check that no message/start was sent. Confirm Start preserves
+the chosen identity and deep-link payload without a second picker. Reopen an
+established bot and confirm its original account. Switch modes during username or
+Mini App resolution and verify no deferred start. Restart/export/import/reset and
+verify the mode preference. Turn Always ask off with and without a valid saved
+account, including cancelling the resulting settings picker.
+
 ## Routing and history
 
 BotAccountPolicy makes the decision independently of Android. BotAccountRouter
@@ -87,7 +112,7 @@ uv run --with pytest python -m pytest tests/test_bot_privacy.py -q
 10 tests passed. The tests compile/run the real Java policy and duplicate-start
 component, and execute the actual MessagesStorage evidence SQL against SQLite.
 They cover OFF, new/existing/ambiguous/missing accounts, incomplete evidence,
-configuration/active-account changes, reused account slots, payload/identity
+configuration/active-account/Always-ask changes, reused account slots, Always-ask decisions without a configured account, payload/identity
 separation, failure retry, empty cached dialogs, archives, retained read state and
 pending messages. They do not exercise Android navigation or real Telegram servers.
 Changed Java sources also passed tree-sitter syntax parsing; localized XML parsed.
@@ -99,12 +124,13 @@ git submodule update --init TMessagesProj_Modules/media
 ./gradlew :TMessagesProj:compileDebugJavaWithJavac --console=plain
 ```
 
-The initial attempt found the missing media submodule. After initializing it,
-Gradle completed buildSrc tasks, then failed while configuring TMessagesProj:
-`SDK location not found`. No Android compilation success is claimed. This checkout
-has no Android SDK/device/emulator, so screenshots and device scenarios below have
-**not** been executed. The repository's PR workflow provisions SDK/NDK and builds
-`TMessagesProj:assembleDebug`; its result must be checked before merging.
+The initial attempt found a missing media submodule and then a missing SDK. After
+provisioning Android SDK 37.0, build-tools 36.0.0, NDK 27.2.12479018, CMake 3.31.6
+and Python 3.11, the ARM64 debug APK built successfully (including native code).
+The user reports the original feature works on a second phone. The Always-ask
+follow-up adds policy/snapshot assertions and the manual scenarios above; the
+agent has not executed real multi-account bot interactions or captured screenshots.
+The repository's PR workflow provisions SDK/NDK and builds `TMessagesProj:assembleDebug`.
 
 ## Device acceptance matrix (manual, not run)
 

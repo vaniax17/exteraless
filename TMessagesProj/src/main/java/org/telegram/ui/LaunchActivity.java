@@ -4443,11 +4443,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             final long botPrivacyIdentity = UserConfig.getInstance(intentAccount).getClientUserId();
             final int botPrivacyActive = UserConfig.selectedAccount;
             final long botPrivacySetting = app.exteraless.general.GeneralConfig.botPrivacyUserId.Long();
+            final boolean botPrivacyAlwaysAsk = app.exteraless.general.GeneralConfig.botPrivacyAlwaysAsk.Bool();
             MessagesController.getInstance(intentAccount).getUserNameResolver().resolve(username, referrer, (peerId) -> {
                 if (app.exteraless.privacy.BotAccountRouter.enabled() &&
                         (botPrivacyIdentity != UserConfig.getInstance(intentAccount).getClientUserId() ||
                          botPrivacyActive != UserConfig.selectedAccount ||
-                         botPrivacySetting != app.exteraless.general.GeneralConfig.botPrivacyUserId.Long())) {
+                         botPrivacySetting != app.exteraless.general.GeneralConfig.botPrivacyUserId.Long() ||
+                         botPrivacyAlwaysAsk != app.exteraless.general.GeneralConfig.botPrivacyAlwaysAsk.Bool())) {
                     dismissLoading.run();
                     return;
                 }

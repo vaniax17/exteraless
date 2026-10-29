@@ -5,15 +5,16 @@ public final class BotAccountPolicy {
     public static final int UNAVAILABLE = -1;
     public static final int AMBIGUOUS = -2;
     public static final int UNKNOWN = -3;
+    public static final int ASK = -4;
 
     private BotAccountPolicy() {}
 
     public static boolean isCurrent(long[] before, long[] now, long configuredBefore, long configuredNow,
-                                    int activeBefore, int activeNow, boolean enabled) {
-        return enabled && configuredBefore == configuredNow && activeBefore == activeNow && java.util.Arrays.equals(before, now);
+                                    int activeBefore, int activeNow, boolean enabled, boolean askBefore, boolean askNow) {
+        return enabled && askBefore == askNow && configuredBefore == configuredNow && activeBefore == activeNow && java.util.Arrays.equals(before, now);
     }
 
-    public static int choose(boolean enabled, int requested, int configured, boolean explicit,
+    public static int choose(boolean enabled, boolean alwaysAsk, int requested, int configured, boolean explicit,
                              int[] established, boolean complete) {
         if (!enabled) return requested;
         if (explicit) {
@@ -24,6 +25,7 @@ public final class BotAccountPolicy {
         if (!complete) return UNKNOWN;
         if (established.length == 1) return established[0];
         if (established.length > 1) return AMBIGUOUS;
+        if (alwaysAsk) return ASK;
         return configured < 0 ? UNAVAILABLE : configured;
     }
 }
