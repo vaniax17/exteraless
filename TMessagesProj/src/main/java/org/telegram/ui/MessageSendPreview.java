@@ -135,7 +135,6 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
     private EmojiAnimationsOverlay effectOverlay;
 
     private boolean keyboardVisible;
-    private int keyboardHeight;
 
     private float effectSelectorContainerY;
     private FrameLayout effectSelectorContainer;
@@ -440,8 +439,6 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
             @Override
             public @NonNull WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat i) {
                 insets = AndroidUtilities.getDefaultWindowInsets(i, false);
-                keyboardHeight = i.getInsets(WindowInsetsCompat.Type.ime()).bottom;
-                layoutDone = false;
                 containerView.setPadding(insets.left, insets.top, insets.right, insets.bottom);
                 windowView.requestLayout();
                 return WindowInsetsCompat.CONSUMED;
@@ -1163,7 +1160,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         params.dimAmount = 0;
         params.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
-        params.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
+        params.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         params.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                 WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS |
@@ -1505,7 +1502,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         final int top = insets.top + dp(8);
 
         final int heightdown = dp(messageObjects.isEmpty() ? -6 : 48) + (optionsView == null ? 0 : optionsView.getMeasuredHeight());
-        final int bottom = containerView.getMeasuredHeight() - dp(8) - Math.max(insets.bottom, keyboardHeight);
+        final int bottom = containerView.getMeasuredHeight() - dp(8) - insets.bottom;
         if (pos[1] + heightdown > bottom) {
             pos[1] = bottom - heightdown;
         }
