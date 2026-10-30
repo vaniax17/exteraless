@@ -135,6 +135,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
     private EmojiAnimationsOverlay effectOverlay;
 
     private boolean keyboardVisible;
+    private int keyboardHeight;
 
     private float effectSelectorContainerY;
     private FrameLayout effectSelectorContainer;
@@ -1419,7 +1420,10 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         }
 
         new KeyboardNotifier(windowView, keyboardHeight -> {
+            this.keyboardHeight = keyboardHeight;
             keyboardVisible = keyboardHeight - insets.bottom > dp(20);
+            layoutDone = false;
+            windowView.requestLayout();
             float newY = keyboardVisible ? Math.min(effectSelectorContainerY, windowView.getHeight() - keyboardHeight - effectSelectorContainer.getMeasuredHeight()) : effectSelectorContainerY;
             effectSelectorContainer.animate().translationY(newY - effectSelectorContainer.getTop()).setDuration(AdjustPanLayoutHelper.keyboardDuration).setInterpolator(AdjustPanLayoutHelper.keyboardInterpolator).start();
         });
@@ -1502,7 +1506,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         final int top = insets.top + dp(8);
 
         final int heightdown = dp(messageObjects.isEmpty() ? -6 : 48) + (optionsView == null ? 0 : optionsView.getMeasuredHeight());
-        final int bottom = containerView.getMeasuredHeight() - dp(8) - insets.bottom;
+        final int bottom = containerView.getMeasuredHeight() - dp(8) - Math.max(insets.bottom, keyboardHeight);
         if (pos[1] + heightdown > bottom) {
             pos[1] = bottom - heightdown;
         }
