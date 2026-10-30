@@ -362,7 +362,11 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
                             canvas.restore();
                             canvas.saveLayerAlpha(0, 0, destCell.getWidth(), destCell.getHeight(), (int) (0xFF * (1f - openProgress)), Canvas.ALL_SAVE_FLAG);
                             canvas.translate(0, destCell.getPaddingTop());
+                            // The preview owns this crossfade; the list may still have the cell at alpha zero.
+                            final float destAlpha = destCell.getAlpha();
+                            destCell.setAlpha(1f);
                             destCell.drawBackgroundInternal(canvas, true);
+                            destCell.setAlpha(destAlpha);
                             canvas.restore();
                         }
                         mainMessageCell.draw(canvas);

@@ -20975,7 +20975,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentMessageObject == null) {
             return false;
         }
-        // Preview rebinding can draw the parent-owned bubble before the next layout pass.
+        if (!wasLayout && !animationRunning) {
+            forceLayout();
+            return false;
+        }
         if (!wasLayout || forcedLayout) {
             onLayout(false, getLeft(), getTop(), getRight(), getBottom());
         }
