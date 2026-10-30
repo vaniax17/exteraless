@@ -7059,6 +7059,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.setOnCancelListener((__) -> {
                         cancel.set(true);
                     });
+                    status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                     status.show();
                 }
 
@@ -7075,6 +7076,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.dismiss();
                     AlertUtil.showTransFailedDialog(parentActivity, unsupported, message, () -> {
                         status = AlertUtil.showProgress(parentActivity);
+                        status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                         status.show();
                         Translator.translateWithContext(target, origin, new ArrayList<>(), null, provider, this);
                     });
@@ -7092,6 +7094,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                         cancel.set(true);
                     });
 
+                    status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                     status.show();
 
                 }
@@ -7108,6 +7111,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.dismiss();
                     AlertUtil.showTransFailedDialog(parentActivity, unsupported, message, () -> {
                         status = AlertUtil.showProgress(parentActivity);
+                        status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                         status.show();
                         Translator.translate(target, origin, 0, this);
                     });
