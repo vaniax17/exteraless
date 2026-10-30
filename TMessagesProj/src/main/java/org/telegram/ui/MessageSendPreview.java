@@ -440,6 +440,8 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
             @Override
             public @NonNull WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat i) {
                 insets = AndroidUtilities.getDefaultWindowInsets(i, false);
+                keyboardHeight = i.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                layoutDone = false;
                 containerView.setPadding(insets.left, insets.top, insets.right, insets.bottom);
                 windowView.requestLayout();
                 return WindowInsetsCompat.CONSUMED;
@@ -1420,10 +1422,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         }
 
         new KeyboardNotifier(windowView, keyboardHeight -> {
-            this.keyboardHeight = keyboardHeight;
             keyboardVisible = keyboardHeight - insets.bottom > dp(20);
-            layoutDone = false;
-            windowView.requestLayout();
             float newY = keyboardVisible ? Math.min(effectSelectorContainerY, windowView.getHeight() - keyboardHeight - effectSelectorContainer.getMeasuredHeight()) : effectSelectorContainerY;
             effectSelectorContainer.animate().translationY(newY - effectSelectorContainer.getTop()).setDuration(AdjustPanLayoutHelper.keyboardDuration).setInterpolator(AdjustPanLayoutHelper.keyboardInterpolator).start();
         });
