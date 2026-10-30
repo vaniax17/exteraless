@@ -134,6 +134,10 @@ object GeneralConfig {
                     FileLog.e(e)
                 }
             }
+            // Older test builds used the dedicated-account flag as the master switch for Always ask.
+            if (botPrivacyAlwaysAsk.Bool() && botPrivacyEnabled.Bool()) {
+                botPrivacyEnabled.setConfigBool(false)
+            }
             configLoaded = true
         }
         migrateLegacyKeys()

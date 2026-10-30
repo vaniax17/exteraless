@@ -56,7 +56,7 @@ public final class BotAccountRouter {
             lastAlwaysAsk = alwaysAsk;
             lastConfigured = configured;
         }
-        return enabled;
+        return BotAccountPolicy.isEnabled(enabled, alwaysAsk);
     }
 
     public static int configuredAccount() {
@@ -120,7 +120,10 @@ public final class BotAccountRouter {
                     selectAccount(activity, accounts(), account -> {
                         GeneralConfig.botPrivacyUserId.setConfigLong(UserConfig.getInstance(account).getClientUserId());
                     }));
-            builder.setNeutralButton(LocaleController.getString(R.string.Disable), (d, w) -> GeneralConfig.botPrivacyEnabled.setConfigBool(false));
+            builder.setNeutralButton(LocaleController.getString(R.string.Disable), (d, w) -> {
+                GeneralConfig.botPrivacyEnabled.setConfigBool(false);
+                GeneralConfig.botPrivacyAlwaysAsk.setConfigBool(false);
+            });
         }
         builder.show();
     }
@@ -196,7 +199,7 @@ public final class BotAccountRouter {
             finished = true;
             if (!valid()) return;
             int[] established = existing.stream().mapToInt(Integer::intValue).toArray();
-            int result = BotAccountPolicy.choose(true, alwaysAsk, requested, configuredAccount(), explicit, established, !failed);
+            int result = BotAccountPolicy.choose(GeneralConfig.botPrivacyEnabled.Bool(), alwaysAsk, requested, configuredAccount(), explicit, established, !failed);
             if (result == BotAccountPolicy.AMBIGUOUS || result == BotAccountPolicy.ASK) {
                 selectAccount(activity, result == BotAccountPolicy.ASK ? accounts() : established, account -> {
                     if (valid()) callback.run(account);

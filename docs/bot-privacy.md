@@ -14,10 +14,14 @@ which currently logged-in, visible account to use. Cancelling does not open/star
 the bot. Existing conversations still retain their original accounts; generic
 links with several established conversations still offer only those accounts.
 
-Turning this mode on enables the privacy feature and hides the dedicated-account
-row. Turning it off restores the saved dedicated account, or asks for one when none
-is available. Turning the main feature off disables routing while retaining the
-mode preference. The boolean is global and participates in backup/reset/search.
+The two switches are mutually exclusive: turning Always ask on turns Use Selected
+Account off and hides the dedicated-account row; turning Use Selected Account on
+turns Always ask off. Turning the active switch off disables routing. The saved
+account identity is retained; enabling dedicated mode asks for an account only if
+that identity is unavailable. Cancelling that picker leaves the current mode intact.
+Legacy test-build settings with both flags on normalize to Always ask. Visible
+switches animate with TextCheckCell.setChecked; account rows use granular adapter
+insert/remove notifications instead of rebinding the checkbox rows. The boolean is global and participates in backup/reset/search.
 Changing the mode invalidates pending asynchronous decisions and cached handoffs.
 One navigation uses one picker: its selected identity is handed to chat/start/Mini
 App handling without asking again for the same action.
@@ -28,8 +32,9 @@ Cancel one picker and check that no message/start was sent. Confirm Start preser
 the chosen identity and deep-link payload without a second picker. Reopen an
 established bot and confirm its original account. Switch modes during username or
 Mini App resolution and verify no deferred start. Restart/export/import/reset and
-verify the mode preference. Turn Always ask off with and without a valid saved
-account, including cancelling the resulting settings picker.
+verify the mode preference. Switch between both modes and verify the other switch animates off. Turn the
+active mode off and confirm normal routing. Enable dedicated mode without a valid
+saved account and cancel its picker: the previous mode must remain unchanged.
 
 ## Routing and history
 

@@ -23,7 +23,12 @@ public class BotAccountPolicyTest {
         // Always ask applies only after all accounts prove this is a new private bot chat.
         check(BotAccountPolicy.ASK, BotAccountPolicy.choose(true, true, 0, 1, false, new int[]{}, true));
         check(BotAccountPolicy.ASK, BotAccountPolicy.choose(true, true, 0, -1, false, new int[]{}, true));
-        check(0, BotAccountPolicy.choose(false, true, 0, -1, false, new int[]{}, true));
+        check(BotAccountPolicy.ASK, BotAccountPolicy.choose(false, true, 0, -1, false, new int[]{}, true));
+        check(0, BotAccountPolicy.choose(false, true, 0, -1, true, new int[]{0}, true));
+        if (BotAccountPolicy.isEnabled(false, false)) throw new AssertionError("both modes off");
+        if (!BotAccountPolicy.isEnabled(true, false)) throw new AssertionError("dedicated mode");
+        if (!BotAccountPolicy.isEnabled(false, true)) throw new AssertionError("ask mode independent of dedicated switch");
+        if (!BotAccountPolicy.isEnabled(true, true)) throw new AssertionError("legacy settings remain protected");
         check(0, BotAccountPolicy.choose(true, true, 0, 1, false, new int[]{0}, true));
         check(0, BotAccountPolicy.choose(true, true, 0, 2, true, new int[]{0, 1}, true));
         check(BotAccountPolicy.AMBIGUOUS, BotAccountPolicy.choose(true, true, 0, 2, false, new int[]{0, 1}, true));

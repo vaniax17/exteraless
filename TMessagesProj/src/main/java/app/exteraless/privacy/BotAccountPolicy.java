@@ -9,14 +9,18 @@ public final class BotAccountPolicy {
 
     private BotAccountPolicy() {}
 
+    public static boolean isEnabled(boolean useSelectedAccount, boolean alwaysAsk) {
+        return useSelectedAccount || alwaysAsk;
+    }
+
     public static boolean isCurrent(long[] before, long[] now, long configuredBefore, long configuredNow,
                                     int activeBefore, int activeNow, boolean enabled, boolean askBefore, boolean askNow) {
         return enabled && askBefore == askNow && configuredBefore == configuredNow && activeBefore == activeNow && java.util.Arrays.equals(before, now);
     }
 
-    public static int choose(boolean enabled, boolean alwaysAsk, int requested, int configured, boolean explicit,
+    public static int choose(boolean useSelectedAccount, boolean alwaysAsk, int requested, int configured, boolean explicit,
                              int[] established, boolean complete) {
-        if (!enabled) return requested;
+        if (!isEnabled(useSelectedAccount, alwaysAsk)) return requested;
         if (explicit) {
             for (int account : established) {
                 if (account == requested) return requested;
